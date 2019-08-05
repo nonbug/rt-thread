@@ -100,7 +100,7 @@ rt_err_t at24c_read_reg(rt_uint8_t reg, rt_uint16_t len, rt_uint8_t *buf)
 
 //at24c硬件初始化
 //返回值: 0,成功 / -1,错误代码
-static int at24c_hw_init(void)
+int at24c_hw_init(void)
 {
     /* 查找系统中的iic设备 */
     at24c_i2c_bus = rt_i2c_bus_device_find(at24c_I2CBUS_NAME);  /*查找I2C设备*/

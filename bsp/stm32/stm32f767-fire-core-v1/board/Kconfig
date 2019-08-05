@@ -31,12 +31,6 @@ menu "F767 Onboard Peripheral Drivers"
         select BSP_USING_SDRAM
         default n
 
-#    config BSP_USING_MPU6050
-#        bool "Enable MPU6050 (i2c4)"
-#        select BSP_USING_I2C4
-#        select PKG_USING_MPU6XXX
-#        default n
-
 #    config BSP_USING_POT
 #        bool "Enable potentiometer"
 #        select BSP_USING_ADC
@@ -159,7 +153,21 @@ menu "On-chip Peripheral Drivers"
         select RT_USING_QSPI
         select RT_USING_SPI
         default n
+		
+    config BSP_QSPI_USING_DMA
+        bool "Enable QSPI DMA support"
+        default n
         
+    menuconfig BSP_USING_TIM
+        bool "Enable timer"
+        default n
+        select RT_USING_HWTIMER
+        if BSP_USING_TIM
+            config BSP_USING_TIM11
+                bool "Enable TIM11"
+                default n
+        endif
+		
     menuconfig BSP_USING_ADC
         bool "Enable ADC"
         default n
