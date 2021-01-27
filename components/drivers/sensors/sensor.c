@@ -6,6 +6,7 @@
  * Change Logs:
  * Date           Author       Notes
  * 2019-01-31     flybreak     first version
+ * 2020-02-22     luhuadong    support custom commands
  */
 
 #include "sensor.h"
@@ -31,7 +32,11 @@ static char *const sensor_name_str[] =
     "tvoc_",     /* TVOC Level        */
     "noi_",      /* Noise Loudness    */
     "step_",     /* Step sensor       */
-    "forc_"      /* Force sensor      */
+    "forc_",     /* Force sensor      */
+    "dust_",     /* Dust sensor       */
+    "eco2_",     /* eCO2 sensor       */
+    "gnss_",     /* GPS/GNSS sensor   */
+    "tof_"       /* TOF sensor        */
 };
 
 /* Sensor interrupt correlation function */
@@ -211,12 +216,6 @@ static rt_err_t rt_sensor_close(rt_device_t dev)
         sensor->config.power = RT_SENSOR_POWER_DOWN;
     }
 
-    /* Sensor disable interrupt */
-    if (sensor->config.irq_pin.pin != RT_PIN_NONE)
-    {
-        rt_pin_irq_enable(sensor->config.irq_pin.pin, RT_FALSE);
-    }
-
     if (sensor->module != RT_NULL && sensor->info.fifo_max > 0 && sensor->data_buf != RT_NULL)
     {
         for (i = 0; i < sensor->module->sen_num; i ++)
@@ -234,6 +233,11 @@ static rt_err_t rt_sensor_close(rt_device_t dev)
                 sensor->module->sen[i]->data_buf = RT_NULL;
             }
         }
+    }
+    /* Sensor disable interrupt */
+    if (sensor->config.irq_pin.pin != RT_PIN_NONE)
+    {
+        rt_pin_irq_enable(sensor->config.irq_pin.pin, RT_FALSE);
     }
 
 __exit:
@@ -305,7 +309,7 @@ static rt_err_t rt_sensor_control(rt_device_t dev, int cmd, void *args)
     case RT_SENSOR_CTRL_GET_ID:
         if (args)
         {
-            sensor->ops->control(sensor, RT_SENSOR_CTRL_GET_ID, args);
+            result = sensor->ops->control(sensor, RT_SENSOR_CTRL_GET_ID, args);
         }
         break;
     case RT_SENSOR_CTRL_GET_INFO:
@@ -350,7 +354,17 @@ static rt_err_t rt_sensor_control(rt_device_t dev, int cmd, void *args)
         result = sensor->ops->control(sensor, RT_SENSOR_CTRL_SELF_TEST, args);
         break;
     default:
-        return -RT_ERROR;
+
+        if (cmd > RT_SENSOR_CTRL_USER_CMD_START)
+        {
+            /* Custom commands */
+            result = sensor->ops->control(sensor, cmd, args);
+        }
+        else
+        {
+            result = -RT_ERROR;
+        }
+        break;
     }
 
     if (sensor->module)
